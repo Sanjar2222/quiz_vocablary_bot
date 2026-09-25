@@ -5,6 +5,7 @@ import logging
 import os
 import tempfile
 from dotenv import load_dotenv
+from aiohttp import web
 
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.enums import ParseMode
@@ -741,12 +742,31 @@ async def handle_direct_words(message: Message, state: FSMContext):
     )
     await state.set_state(AddWordStates.waiting_for_grammar)
 
+# ----------------- CLOUD HEALTH CHECK SERVER (FOR RENDER / KOYEB) -----------------
+async def handle_ping(request):
+    return web.Response(text="Bot is running!")
+
+async def start_dummy_web_server():
+    port = int(os.getenv("PORT", 8080))
+    app = web.Application()
+    app.router.add_get("/", handle_ping)
+    app.router.add_get("/health", handle_ping)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+    print(f"🌐 Cloud health check server ishga tushdi: port {port}")
+
 # ----------------- MAIN RUNNER -----------------
 async def main():
     print("🚀 Baza ishga tushirilmoqda...")
     await db.init_db()
     print("🧹 Eski webhook tozalanmoqda...")
     await bot.delete_webhook(drop_pending_updates=True)
+
+    if os.getenv("PORT"):
+        await start_dummy_web_server()
+
     print("🤖 Bot muvaffaqiyatli ishga tushdi...")
     await dp.start_polling(bot)
 
