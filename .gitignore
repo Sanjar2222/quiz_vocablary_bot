@@ -1,0 +1,18 @@
+# Virtual environment
+env/
+venv/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local environment secrets
+.env
+
+# Temp audio cache
+audio_cache/
+
+# Desktop GUI script
+main.py
